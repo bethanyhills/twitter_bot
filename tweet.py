@@ -2,8 +2,8 @@
 from twython import Twython
 import random
 import sys
-from secret import APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET
-from seuss import quotes
+import requests
+from bh_secret import APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET
 
 # Running script without -p does not post Tweet. 
 # python tweet.py -p will post to twitter.
@@ -14,24 +14,20 @@ if len(sys.argv) > 1 and sys.argv[1] == "-p":
 # Initializing the twython object.
 twitter = Twython(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
 
-def make_tweet():
-	"""
-	Generate a random tweet from listed quotes. 
-	You can change this to generate a tweet in a different way.
-	"""
-	random_quote = random.choice(quotes)
-	random_quote += " #seuss" #Adding in hashtags
-	return random_quote
+def get_random_cat_fact():
+	url = 'http://catfacts-api.appspot.com/api/facts'
+	headers = {'Content-Type': 'application/json'}
+	resp = requests.get(url, headers)
+	cat_fact = resp.json()['facts'][0]
+	cat_fact += " #catfacts"
+	if len(cat_fact) <= 140:
+		return cat_fact
+	else:
+		return get_random_cat_fact()
 
-tweet = make_tweet()
 
 # Checks to see if tweet should be printed or posted to twitter
 if post_tweet:
-	twitter.update_status(status=tweet)
+	twitter.update_status(status=get_random_cat_fact())
 else:
-	print (tweet)
-
-
-# Things to update:
-# - Try making tweets a different way perhaps with timestamps?
-# - Check and see if your tweet is over 140 characters before tweeting. 
+	print (get_random_cat_fact())
